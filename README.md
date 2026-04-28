@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # UniLink (MERN)
 
 UniLink is a **campus networking platform** where students create profiles, share updates, connect with peers, join groups, and participate in university events.
@@ -51,3 +52,6 @@ Then re-login to receive a token with the admin role.
 - Notifications: list + mark read
 - Admin: approve/reject events, list users, delete posts
 
+=======
+# Unilink
+>>>>>>> 8372aa3e8b79fd6fe7d1e23e2f4e03bfc78514da
