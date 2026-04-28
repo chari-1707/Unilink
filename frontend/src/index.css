@@ -669,6 +669,39 @@ textarea:focus {
   margin: 6px 0;
 }
 
+.socialLinksRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.socialIconLink {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(8, 145, 178, 0.3);
+  background: rgba(240, 253, 255, 0.95);
+  color: #0f172a;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.socialIconLink:hover {
+  transform: translateY(-1px);
+  border-color: rgba(8, 145, 178, 0.45);
+  background: rgba(207, 250, 254, 1);
+  text-decoration: none;
+}
+
+.socialIconLink svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;

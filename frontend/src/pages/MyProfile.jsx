@@ -55,6 +55,29 @@ function ChipsEditor({ label, value = [], onChange, placeholder }) {
   );
 }
 
+function isValidUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidLinkedInUrl(value) {
+  if (!value) return true;
+  if (!isValidUrl(value)) return false;
+  const host = new URL(value).hostname.toLowerCase();
+  return host === "linkedin.com" || host.endsWith(".linkedin.com");
+}
+
+function isValidXUrl(value) {
+  if (!value) return true;
+  if (!isValidUrl(value)) return false;
+  const host = new URL(value).hostname.toLowerCase();
+  return host === "x.com" || host.endsWith(".x.com") || host === "twitter.com" || host.endsWith(".twitter.com");
+}
+
 export default function MyProfile() {
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({
@@ -99,6 +122,23 @@ export default function MyProfile() {
     setError("");
     setSaved("");
     try {
+      const linkedin = form.contact?.linkedin?.trim() || "";
+      const x = form.contact?.x?.trim() || "";
+
+      if (!isValidLinkedInUrl(linkedin)) {
+        const message = "LinkedIn URL is not correct. Please enter a valid LinkedIn URL (example: https://linkedin.com/in/your-id).";
+        window.alert(message);
+        setError(message);
+        return;
+      }
+
+      if (!isValidXUrl(x)) {
+        const message = "X URL is not correct. Please enter a valid X URL (example: https://x.com/your-id).";
+        window.alert(message);
+        setError(message);
+        return;
+      }
+
       const data = await apiFetch("/api/profiles/me", { method: "PUT", body: form });
       setProfile(data.profile);
       setSaved("Saved");
