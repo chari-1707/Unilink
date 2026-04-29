@@ -54,5 +54,39 @@ async function registerForEvent(req, res) {
   res.json({ registered, registrations: event.registrations.length });
 }
 
-module.exports = { listEvents, createEvent, registerForEvent };
+async function updateEvent(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ message: "Invalid input", errors: errors.array() });
+
+  const event = await Event.findById(req.params.eventId);
+  if (!event) return res.status(404).json({ message: "Event not found" });
+
+  const isAdmin = req.user.role === "admin";
+  const isOwner = event.createdBy.toString() === req.user._id.toString();
+  if (!isAdmin && !isOwner) return res.status(403).json({ message: "Not allowed to edit this event" });
+
+  const { eventName, date, location, description } = req.body;
+  event.eventName = eventName;
+  event.date = new Date(date);
+  event.location = location || "";
+  event.description = description || "";
+  await event.save();
+
+  const populated = await Event.findById(event._id).populate("createdBy", "name").lean();
+  res.json({ event: populated });
+}
+
+async function deleteEvent(req, res) {
+  const event = await Event.findById(req.params.eventId);
+  if (!event) return res.status(404).json({ message: "Event not found" });
+
+  const isAdmin = req.user.role === "admin";
+  const isOwner = event.createdBy.toString() === req.user._id.toString();
+  if (!isAdmin && !isOwner) return res.status(403).json({ message: "Not allowed to remove this event" });
+
+  await Event.deleteOne({ _id: event._id });
+  res.json({ ok: true });
+}
+
+module.exports = { listEvents, createEvent, registerForEvent, updateEvent, deleteEvent };
 

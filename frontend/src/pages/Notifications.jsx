@@ -18,6 +18,9 @@ export default function Notifications() {
 
       const hasUnread = notifications.some((n) => !n.readAt);
       if (hasUnread) {
+        // Update UI and badge immediately so user sees instant feedback.
+        setItems((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
+        window.dispatchEvent(new Event("notifications:read-all"));
         await apiFetch("/api/notifications/read-all", { method: "POST" });
         await load();
       }

@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const { requireAuth } = require("../middleware/auth");
-const { listEvents, createEvent, registerForEvent } = require("../controllers/event.controller");
+const { listEvents, createEvent, registerForEvent, updateEvent, deleteEvent } = require("../controllers/event.controller");
 
 const router = express.Router();
 
@@ -20,6 +20,18 @@ router.post(
 );
 
 router.post("/:eventId/register", requireAuth(), (req, res, next) => registerForEvent(req, res).catch(next));
+router.put(
+  "/:eventId",
+  requireAuth(),
+  [
+    body("eventName").isString().trim().isLength({ min: 2, max: 140 }),
+    body("date").isISO8601(),
+    body("location").optional().isString().trim().isLength({ max: 200 }),
+    body("description").optional().isString().trim().isLength({ max: 2000 }),
+  ],
+  (req, res, next) => updateEvent(req, res).catch(next)
+);
+router.delete("/:eventId", requireAuth(), (req, res, next) => deleteEvent(req, res).catch(next));
 
 module.exports = router;
 

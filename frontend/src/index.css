@@ -383,6 +383,16 @@ textarea:focus {
   border-color: rgba(239, 68, 68, 0.35);
 }
 
+.eventActions {
+  justify-content: flex-end;
+}
+
+.eventEditForm {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(8, 145, 178, 0.2);
+}
+
 .alert {
   margin-top: 8px;
   border-radius: 12px;

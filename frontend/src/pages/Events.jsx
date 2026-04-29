@@ -11,6 +11,8 @@ export default function Events() {
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const [editingEventId, setEditingEventId] = useState("");
+  const [editForm, setEditForm] = useState({ eventName: "", date: "", location: "", description: "" });
 
   async function load() {
     const data = await apiFetch("/api/events");
@@ -43,8 +45,51 @@ export default function Events() {
   async function toggleRegister(eventId) {
     setError("");
     try {
-      await apiFetch(`/api/events/${eventId}/register`, { method: "POST" });
-      setToast("Registration status updated");
+      const data = await apiFetch(`/api/events/${eventId}/register`, { method: "POST" });
+      const message = data?.registered
+        ? "You are successfully registered for this event."
+        : "You have successfully unregistered from this event.";
+      window.alert(message);
+      setToast(message);
+      setTimeout(() => setToast(""), 1800);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function startEdit(event) {
+    const dt = event?.date ? new Date(event.date) : null;
+    const localDate = dt && !Number.isNaN(dt.getTime()) ? new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "";
+    setEditingEventId(event._id);
+    setEditForm({
+      eventName: event.eventName || "",
+      date: localDate,
+      location: event.location || "",
+      description: event.description || "",
+    });
+  }
+
+  async function saveEdit(eventId) {
+    setError("");
+    try {
+      await apiFetch(`/api/events/${eventId}`, { method: "PUT", body: editForm });
+      setEditingEventId("");
+      setToast("Event updated successfully");
+      setTimeout(() => setToast(""), 1800);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function removeEvent(eventId) {
+    const ok = window.confirm("Are you sure you want to remove this event?");
+    if (!ok) return;
+    setError("");
+    try {
+      await apiFetch(`/api/events/${eventId}`, { method: "DELETE" });
+      setToast("Event removed successfully");
       setTimeout(() => setToast(""), 1800);
       await load();
     } catch (e) {
@@ -97,11 +142,86 @@ export default function Events() {
                       {new Date(e.date).toLocaleString()} · {e.location || "—"}
                     </div>
                   </div>
-                  <button className="btn" onClick={() => toggleRegister(e._id)}>
-                    Register/Unregister
-                  </button>
+                  {(() => {
+                    const currentUserId = user?.id || user?._id;
+                    const isRegistered = (e.registrations || []).some((id) => String(id) === String(currentUserId));
+                    const isCompleted = new Date(e.date).getTime() < Date.now();
+                    const canManage =
+                      user?.role === "admin" || String(e.createdBy?._id || "") === String(currentUserId);
+                    return (
+                      <div className="row eventActions">
+                        {isCompleted ? (
+                          <span className="pill muted">Event completed</span>
+                        ) : (
+                          <button
+                            className={`btn ${isRegistered ? "danger" : "primary"}`}
+                            onClick={() => toggleRegister(e._id)}
+                          >
+                            {isRegistered ? "Unregister" : "Register"}
+                          </button>
+                        )}
+                        {canManage ? (
+                          <>
+                            <button className="btn btnSmall" onClick={() => startEdit(e)}>
+                              Edit
+                            </button>
+                            <button className="btn btnSmall danger" onClick={() => removeEvent(e._id)}>
+                              Remove
+                            </button>
+                          </>
+                        ) : null}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="hint">{e.description || "—"}</div>
+                {editingEventId === e._id ? (
+                  <div className="form eventEditForm">
+                    <label className="field">
+                      <div className="label">Event name</div>
+                      <input
+                        value={editForm.eventName}
+                        onChange={(ev) => setEditForm({ ...editForm, eventName: ev.target.value })}
+                      />
+                    </label>
+                    <label className="field">
+                      <div className="label">Date</div>
+                      <input
+                        type="datetime-local"
+                        value={editForm.date}
+                        onChange={(ev) => setEditForm({ ...editForm, date: ev.target.value })}
+                      />
+                    </label>
+                    <label className="field">
+                      <div className="label">Location</div>
+                      <input
+                        value={editForm.location}
+                        onChange={(ev) => setEditForm({ ...editForm, location: ev.target.value })}
+                      />
+                    </label>
+                    <label className="field">
+                      <div className="label">Description</div>
+                      <textarea
+                        className="textarea"
+                        rows={3}
+                        value={editForm.description}
+                        onChange={(ev) => setEditForm({ ...editForm, description: ev.target.value })}
+                      />
+                    </label>
+                    <div className="row">
+                      <button
+                        className="btn primary btnSmall"
+                        onClick={() => saveEdit(e._id)}
+                        disabled={!editForm.eventName.trim() || !editForm.date}
+                      >
+                        Save changes
+                      </button>
+                      <button className="btn btnSmall ghost" onClick={() => setEditingEventId("")}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ))}
             {!events.length ? <div className="hint">No events available yet.</div> : null}

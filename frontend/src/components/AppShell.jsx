@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../api/client";
 
-function SideLink({ to, children, end, badge }) {
+function SideLink({ to, children, end, badge, onClick }) {
   return (
-    <NavLink to={to} end={end} className={({ isActive }) => `navlink ${isActive ? "active" : ""}`}>
+    <NavLink to={to} end={end} onClick={onClick} className={({ isActive }) => `navlink ${isActive ? "active" : ""}`}>
       <span>{children}</span>
       {badge ? <span className="navBadge">{badge > 9 ? "9+" : badge}</span> : null}
     </NavLink>
@@ -37,6 +37,14 @@ export function AppShell() {
     };
   }, []);
 
+  useEffect(() => {
+    function onNotificationsReadAll() {
+      setUnreadNotifications(0);
+    }
+    window.addEventListener("notifications:read-all", onNotificationsReadAll);
+    return () => window.removeEventListener("notifications:read-all", onNotificationsReadAll);
+  }, []);
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -54,7 +62,15 @@ export function AppShell() {
           <SideLink to="/app/students">Students</SideLink>
           <SideLink to="/app/connections">Connections</SideLink>
           <SideLink to="/app/events">Events</SideLink>
-          <SideLink to="/app/notifications" badge={unreadNotifications}>Notifications</SideLink>
+          <SideLink
+            to="/app/notifications"
+            badge={unreadNotifications}
+            onClick={() => {
+              setUnreadNotifications(0);
+            }}
+          >
+            Notifications
+          </SideLink>
           {user?.role === "admin" ? <SideLink to="/app/admin">Admin</SideLink> : null}
         </div>
 
